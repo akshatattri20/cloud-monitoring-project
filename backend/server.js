@@ -1,30 +1,53 @@
-const express = require("express")
-const cors = require("cors")
+const express = require("express");
+const cors = require("cors");
 
-const app = express()
-app.use(cors())
+const app = express();
 
-function generateVMData(){
-  return [
-    {name:"VM1", cpu: Math.floor(Math.random()*100), cost: Math.floor(Math.random()*20)+5},
-    {name:"VM2", cpu: Math.floor(Math.random()*100), cost: Math.floor(Math.random()*20)+5},
-    {name:"VM3", cpu: Math.floor(Math.random()*100), cost: Math.floor(Math.random()*20)+5},
-    {name:"VM4", cpu: Math.floor(Math.random()*100), cost: Math.floor(Math.random()*20)+5}
-  ]
+app.use(cors());
+app.use(express.json());
+
+const PORT = process.env.PORT || 5000;
+
+function getRandom(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-app.get("/api/vm-data", (req,res)=>{
-  const vmData = generateVMData()
-  res.json(vmData)
-})
+function generateVMData() {
+  return [
+    { name: "VM1", cpu: getRandom(0, 100), cost: getRandom(5, 25) },
+    { name: "VM2", cpu: getRandom(0, 100), cost: getRandom(5, 25) },
+    { name: "VM3", cpu: getRandom(0, 100), cost: getRandom(5, 25) },
+    { name: "VM4", cpu: getRandom(0, 100), cost: getRandom(5, 25) }
+  ];
+}
 
-app.get("/api/provider-cost",(req,res)=>{
-  res.json([
-    {name:"AWS", cost:Math.floor(Math.random()*150)+50},
-    {name:"Azure", cost:Math.floor(Math.random()*150)+50},
-    {name:"GCP", cost:Math.floor(Math.random()*150)+50}
-  ])
-})
+app.get("/api/vm-data", (req, res) => {
+  try {
+    const vmData = generateVMData();
+    res.json(vmData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch VM data" });
+  }
+});
 
-const PORT = 5000
-app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`))
+app.get("/api/provider-cost", (req, res) => {
+  try {
+    const providerData = [
+      { name: "AWS", cost: getRandom(50, 200) },
+      { name: "Azure", cost: getRandom(50, 200) },
+      { name: "GCP", cost: getRandom(50, 200) }
+    ];
+    res.json(providerData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch provider cost" });
+  }
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK", message: "Server is running" });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
