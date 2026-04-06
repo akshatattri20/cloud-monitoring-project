@@ -1,8 +1,11 @@
+const BASE_URL = "http://localhost:5000";
+
 // Select chart elements
 const vmChartCanvas = document.getElementById("vmChart").getContext("2d");
 const providerChartCanvas = document.getElementById("providerChart").getContext("2d");
+const statusText = document.getElementById("status");
 
-// Initialize charts with empty data
+// Initialize charts
 const vmChart = new Chart(vmChartCanvas, {
     type: "bar",
     data: {
@@ -13,7 +16,7 @@ const vmChart = new Chart(vmChartCanvas, {
             backgroundColor: "rgba(54, 162, 235, 0.6)"
         }]
     },
-    options: { responsive: true, plugins: { legend: { display: true } } }
+    options: { responsive: true }
 });
 
 const providerChart = new Chart(providerChartCanvas, {
@@ -29,42 +32,49 @@ const providerChart = new Chart(providerChartCanvas, {
     options: { responsive: true }
 });
 
-// Fetch VM data from backend
-async function fetchVMData() {
+// Reusable fetch function
+async function fetchData(endpoint) {
     try {
-        const response = await fetch("http://localhost:5000/api/vm-data");
-        const data = await response.json();
-
-        // Update VM chart
-        vmChart.data.labels = data.map(vm => vm.name);
-        vmChart.data.datasets[0].data = data.map(vm => vm.cost);
-        vmChart.update();
+        const response = await fetch(`${BASE_URL}${endpoint}`);
+        if (!response.ok) throw new Error("Network response was not ok");
+        return await response.json();
     } catch (error) {
-        console.error("Error fetching VM data:", error);
+        statusText.innerText = "Error fetching data!";
+        console.error(error);
+        return null;
     }
 }
 
-// Fetch provider cost data from backend
-async function fetchProviderData() {
-    try {
-        const response = await fetch("http://localhost:5000/api/provider-cost");
-        const data = await response.json();
+// Update VM chart
+async function updateVMChart() {
+    const data = await fetchData("/api/vm-data");
+    if (!data) return;
 
-        // Update provider chart
-        providerChart.data.labels = data.map(p => p.name);
-        providerChart.data.datasets[0].data = data.map(p => p.cost);
-        providerChart.update();
-    } catch (error) {
-        console.error("Error fetching provider data:", error);
-    }
+    vmChart.data.labels = data.map(vm => vm.name);
+    vmChart.data.datasets[0].data = data.map(vm => vm.cost);
+    vmChart.update();
 }
 
-// Auto-update charts every 5 seconds
-setInterval(() => {
-    fetchVMData();
-    fetchProviderData();
-}, 5000);
+// Update Provider chart
+async function updateProviderChart() {
+    const data = await fetchData("/api/provider-cost");
+    if (!data) return;
 
-// Initial fetch
-fetchVMData();
-fetchProviderData();
+    providerChart.data.labels = data.map(p => p.name);
+    providerChart.data.datasets[0].data = data.map(p => p.cost);
+    providerChart.update();
+}
+
+// Refresh all data
+async function refreshData() {
+    statusText.innerText = "Updating data...";
+    await updateVMChart();
+    await updateProviderChart();
+    statusText.innerText = "Data updated (auto-refresh every 5s)";
+}
+
+// Auto-update
+setInterval(refreshData, 5000);
+
+// Initial load
+refreshData();
