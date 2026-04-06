@@ -2,15 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cloud Cost Monitoring Dashboard</title>
-<link rel="stylesheet" href="style.css">
 
+<link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
 <h1>Cloud Cost Monitoring Dashboard</h1>
+
+<p id="status" class="update">Loading data...</p>
 
 <div class="container">
 
@@ -26,7 +29,7 @@
 
 </div>
 
-<p class="update">Data updates every 5 seconds</p>
+<button onclick="refreshData()" class="refresh-btn">Refresh Now</button>
 
 <script src="script.js"></script>
 
